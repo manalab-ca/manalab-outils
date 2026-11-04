@@ -12,6 +12,8 @@ Les scripts qui fabriquent les données de [ManaLab](https://manalab.ca), le lab
 | `build_prints.py` | Produit `prints.json` : les éditions et versions de chaque carte. |
 | `build_combos.py` | Produit `combos.json` à partir de l'export public de [Commander Spellbook](https://commanderspellbook.com). |
 | `build_tags.py`, `fetch_sftags.py` | Récupèrent sur [Scryfall](https://scryfall.com) les Game Changers et des étiquettes de rôles. |
+| `fetch_themetags.py`, `add_themes.py` | Récupèrent les étiquettes de thèmes de Scryfall (meule, blink, réanimation…) et les ajoutent à `cards.json`. |
+| `banc/theme_tests.py` | Banc d'essai par archétype : thème détecté sur des précons connus, et cartes que le plan d'amélioration ne doit jamais couper. |
 | `fetch_fr.py` | Récupère les noms et textes français des cartes (Scryfall). |
 | `to_js.py` | Convertit un `.json` en `.data.js` pour ouvrir le site sans serveur. |
 | `compare_roles.py` | Compare les rôles détectés avec les étiquettes Scryfall. |
@@ -23,7 +25,9 @@ Les scripts qui fabriquent les données de [ManaLab](https://manalab.ca), le lab
 ```bash
 git clone --depth 1 https://github.com/Card-Forge/forge.git
 python3 build_tags.py
+python3 fetch_themetags.py
 python3 build_db.py forge/forge-gui/res cards.json
+python3 add_themes.py cards.json
 python3 build_prints.py forge/forge-gui/res prints.json cards.json
 curl -O https://json.commanderspellbook.com/variants.json.gz
 python3 build_combos.py variants.json.gz combos.json

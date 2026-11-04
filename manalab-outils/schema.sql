@@ -39,6 +39,24 @@ create table if not exists public.role_reports (
   created_at timestamptz not null default now()
 );
 
+-- 5. Les signalements de problèmes (bouton « Signaler un problème »)
+create table if not exists public.reports (
+  id         bigint      generated always as identity primary key,
+  kind       text        not null check (length(kind) < 40),
+  message    text        not null check (length(message) between 3 and 4000),
+  email      text        check (email is null or length(email) < 200),
+  context    jsonb       not null default '{}'::jsonb,
+  user_id    uuid        references auth.users (id) on delete set null,
+  status     text        not null default 'nouveau' check (status in ('nouveau', 'vu', 'corrigé', 'ignoré')),
+  created_at timestamptz not null default now(),
+  constraint report_ctx_size check (pg_column_size(context) < 60000)
+);
+alter table public.reports enable row level security;
+drop policy if exists "signalements: envoi" on public.reports;
+create policy "signalements: envoi" on public.reports for insert
+  with check ((user_id is null or user_id = auth.uid()) and status = 'nouveau');
+-- (personne ne peut lire les signalements depuis le site : tu les lis dans Table Editor › reports)
+
 -- Sécurité : chaque joueur ne voit et ne modifie que ses propres données
 alter table public.decks        enable row level security;
 alter table public.user_data    enable row level security;
@@ -92,5 +110,6 @@ create or replace view public.stats with (security_invoker = true) as
     (select count(*) from auth.users)                          as comptes,
     (select count(*) from public.decks where not deleted)      as decks,
     (select count(*) from public.shared_decks)                 as liens_partages,
-    (select count(*) from public.role_reports)                 as corrections_roles;
+    (select count(*) from public.role_reports)                 as corrections_roles,
+    (select count(*) from public.reports where status = 'nouveau') as signalements_nouveaux;
 revoke all on public.stats from anon, authenticated;
