@@ -2,8 +2,11 @@
    python3 theme_tests.py   (needs the local server on 8768)"""
 import asyncio, json
 from playwright.async_api import async_playwright
-SP = './decks/'
-precons = {x['name']: x for x in json.load(open('precons.json'))}
+import os, sys
+HERE = os.path.dirname(os.path.abspath(__file__))
+SP = os.path.join(HERE, 'decks') + os.sep
+URL = sys.argv[sys.argv.index('--url') + 1] if '--url' in sys.argv else 'http://localhost:8768/index.html'
+precons = {x['name']: x for x in json.load(open(os.path.join(HERE, 'precons.json')))}
 # precon → theme keys accepted as the main theme
 EXPECT = {
   "Grave Danger [SCD] [2022]": ["typal_Zombie"], "Elven Empire [KHC] [2021]": ["typal_Elf"], "Blood Rites [LCC] [2023]": ["typal_Vampire"],
@@ -30,9 +33,9 @@ JS = '''(D) => { var L = window.__labo, out = {};
 async def main():
     fails = 0
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await p.chromium.launch(**({"executable_path": "/usr/bin/google-chrome"} if os.path.exists("/usr/bin/google-chrome") else {}), args=["--no-sandbox"])
         pg = await b.new_page()
-        await pg.add_init_script('localStorage.setItem("labo.started","true")'); await pg.goto('http://localhost:8768/index.html#deck'); await pg.wait_for_function('document.getElementById("loading").hidden', timeout=90000)
+        await pg.add_init_script('localStorage.setItem("labo.started","true")'); await pg.goto(URL); await pg.wait_for_function('document.getElementById("loading").hidden', timeout=90000)
         await pg.evaluate('__labo.loadCombos()'); await pg.wait_for_function('__labo.cbReady()', timeout=90000)
         got = await pg.evaluate(JS, {k: precons[k] for k in EXPECT})
         for k, exp in EXPECT.items():
@@ -53,4 +56,5 @@ async def main():
                     print(("OK  " if ok else "FAIL"), f, goal, "B%d" % cap, "thème", r['main'], "coupes", r['cuts'][:10], "imposées par le bracket", r['forced'], ("INTERDITES: " + str(bad)) if bad else "")
         await b.close()
     print("\n%d échec(s)" % fails)
+    if fails: sys.exit(1)
 asyncio.run(main())

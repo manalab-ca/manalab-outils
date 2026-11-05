@@ -15,7 +15,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
         pg = await b.new_page()
-        await pg.goto('http://localhost:8768/index.html#deck'); await pg.wait_for_selector('.hero-in', timeout=90000)
+        await pg.add_init_script('localStorage.setItem("labo.started","true")'); await pg.goto('http://localhost:8768/index.html#deck'); await pg.wait_for_function('document.getElementById("loading").hidden', timeout=90000)
         await pg.evaluate('__labo.loadCombos()'); await pg.wait_for_function('__labo.cbReady()', timeout=90000)
         res = await pg.evaluate(JS, decks)
         await b.close()
