@@ -1,0 +1,27 @@
+# ManaLab — banc d'essai automatique
+# Chaque lundi (et à la demande, onglet Actions › Run workflow), GitHub ouvre manalab.ca dans un navigateur et vérifie :
+#   1. que les decks de référence (précons, cEDH, decks connus, piles au hasard) tombent dans leur fourchette de puissance ;
+#   2. que les thèmes sont bien reconnus et que le plan d'amélioration ne coupe jamais les cartes clés.
+# Si un test échoue, GitHub t'envoie un courriel.
+name: Banc d'essai ManaLab
+on:
+  schedule:
+    - cron: "17 13 * * 1"
+  workflow_dispatch:
+jobs:
+  banc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Installer
+        run: |
+          pip install playwright numpy scipy
+          python -m playwright install --with-deps chromium
+      - name: Puissance des decks de référence
+        run: python manalab-outils/banc/calibrate.py --url https://manalab.ca/index.html --min 0.95
+      - name: Thèmes et plan d'amélioration
+        run: python manalab-outils/banc/theme_tests.py --url https://manalab.ca/index.html
