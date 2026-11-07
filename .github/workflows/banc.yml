@@ -22,6 +22,6 @@ jobs:
           pip install playwright numpy scipy
           python -m playwright install --with-deps chromium
       - name: Puissance des decks de référence
-        run: python manalab-outils/banc/calibrate.py --url https://manalab.ca/index.html --min 0.95
+        run: python manalab-outils/banc/calibrate.py --url https://manalyse.ca/index.html --min 0.95
       - name: Thèmes et plan d'amélioration
-        run: python manalab-outils/banc/theme_tests.py --url https://manalab.ca/index.html
+        run: python manalab-outils/banc/theme_tests.py --url https://manalyse.ca/index.html
